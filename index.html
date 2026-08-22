@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>I.E. Guillermo Pinto Ismodes - Control de Asistencia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    
+    .st-X { color: #15803d; background-color: #dcfce7; font-weight: 700; }
+    .st-P { color: #15803d; background-color: #dcfce7; font-weight: 700; }
+    .st-T { color: #b45309; background-color: #fef3c7; font-weight: 700; }
+    .st-F { color: #b91c1c; background-color: #fee2e2; font-weight: 700; }
+
+    .day-weekend { background-color: #fef2f2 !important; color: #dc2626 !important; font-weight: 800; }
+    .day-feriado { background-color: #ffe4e6 !important; color: #be123c !important; font-weight: 800; }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { padding: 0 !important; background: #fff !important; color: #000 !important; font-size: 8px !important; }
+      .sheet-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+      
+      /* Optimización extrema del título para impresión */
+      header { 
+        padding: 4px 8px !important; 
+        border-bottom: 2px solid #f59e0b !important; 
+        background-color: #1e1b4b !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        border-radius: 4px !important;
+      }
+      header h1 { font-size: 13px !important; line-height: 1.1 !important; margin: 0 !important; }
+      header img { height: 24px !important; width: auto !important; }
+      
+      .print-title { font-size: 11px !important; margin-bottom: 2px !important; margin-top: 4px !important; }
+      .print-subtitle { font-size: 9px !important; margin-top: 0 !important; }
+      
+      .signatures-container { margin-top: 20px !important; padding-top: 0 !important; page-break-inside: avoid; }
+
+      @page { size: A4 landscape; margin: 3mm; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen p-2 md:p-4 font-sans text-xs">
+
+  <div class="max-w-[1500px] mx-auto space-y-3">
+    
+    <!-- Encabezado Institucional -->
+    <header class="bg-indigo-950 text-white rounded-xl p-3 shadow-md border-b-4 border-amber-500 relative overflow-hidden">
+      <div class="absolute -right-8 -bottom-8 opacity-10 text-8xl text-white pointer-events-none no-print">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="flex items-center justify-between gap-3 relative z-10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur border border-amber-400/60 rounded-lg p-0.5 flex items-center justify-center shrink-0">
+            <img id="logoInstitucion" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlxVGY62CT8y79VMt2kTGq_oJl9C9MmnRMyF6iBJIv0w&s=10" alt="Logo Institución" class="max-h-full max-w-full object-contain rounded">
+          </div>
+          <div>
+            <span class="bg-amber-500 text-indigo-950 text-[9px] font-black uppercase px-2 py-0.2 rounded-full tracking-wider no-print">
+              Santa María de Chicmo
+            </span>
+            <h1 class="text-base md:text-xl font-extrabold tracking-tight">I.E. GUILLERMO PINTO ISMODES</h1>
+            <p class="text-indigo-200 text-[10px] font-light italic no-print">"Estudio • Deporte • Disciplina"</p>
+          </div>
+        </div>
+
+        <div class="bg-indigo-900/80 backdrop-blur border border-indigo-700/50 px-3 py-1.5 rounded-lg text-right">
+          <p class="text-[8px] text-indigo-300 font-semibold no-print">Plataforma Digital de Control</p>
+          <p class="text-xs md:text-sm font-extrabold text-amber-400 uppercase tracking-tight">ASISTENCIA MENSUAL</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Filtros de Búsqueda -->
+    <section class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 no-print">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Año Lectivo</label>
+          <input type="number" id="anio" value="2026" onchange="cargarAsistencia()" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Mes Evaluado</label>
+          <select id="mes" onchange="cargarAsistencia()" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
+            <option value="01">Enero</option><option value="02">Febrero</option><option value="03">Marzo</option>
+            <option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option>
+            <option value="07">Julio</option><option value="08" selected>Agosto</option><option value="09">Septiembre</option>
+            <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Grado y Sección</label>
+          <select id="gradoSeccion" onchange="cargarAsistencia()" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
+            <option value="1°A">1°A</option><option value="1°B">1°B</option><option value="2°U" selected>2°U</option>
+            <option value="3°A">3°A</option><option value="3°B">3°B</option><option value="4°A">4°A</option>
+            <option value="4°B">4°B</option><option value="5°A">5°A</option><option value="5°B">5°B</option>
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="cargarAsistencia()" id="btnConsultar" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-1.5 px-3 rounded-md shadow transition flex items-center justify-center gap-1.5 text-xs">
+            <i class="fa-solid fa-magnifying-glass"></i> Consultar
+          </button>
+          <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-md shadow transition flex items-center justify-center gap-1.5 text-xs whitespace-nowrap">
+            <i class="fa-solid fa-print"></i> Imprimir
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Matriz de Sábana Mensual -->
+    <main class="sheet-card bg-white p-3 rounded-xl shadow-sm border border-slate-200">
+      <div class="text-center pb-1.5 mb-2 border-b border-slate-200">
+        <h2 class="print-title text-sm md:text-base font-black text-indigo-950 uppercase tracking-tight">CONTROL DE ASISTENCIA MENSUAL</h2>
+        <p id="subtitulo" class="print-subtitle text-[11px] text-slate-600 font-bold">Cargando base de datos...</p>
+        <span id="primer-registro-tag" class="inline-block mt-0.5 bg-indigo-50 text-indigo-800 border border-indigo-200 text-[9px] font-bold px-2 py-0.5 rounded-full no-print" style="display:none;"></span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-center border-collapse border border-slate-300 text-[10px] font-sans">
+          <thead>
+            <tr id="tr-header-days" class="text-slate-800 font-black uppercase text-[10px]">
+              <th rowspan="2" class="border border-slate-300 py-0.5 px-1 w-6 font-black bg-slate-200 text-slate-800">N°</th>
+              <th rowspan="2" class="border border-slate-300 py-0.5 px-1 w-14 font-black tracking-tight bg-slate-200 text-slate-800">DNI</th>
+              <th rowspan="2" class="border border-slate-300 py-0.5 px-1.5 text-left min-w-[170px] font-black bg-slate-200 text-slate-800">Apellidos y Nombres</th>
+              <!-- Días inyectados dinámicamente -->
+              <th rowspan="2" class="border border-slate-300 py-0.5 px-1 w-6 text-emerald-700 font-black bg-slate-200" title="Asistencias Puntuales (X)">Cant. Asistencias (X)</th>
+              <th rowspan="2" class="border border-slate-300 py-0.5 px-1 w-6 text-amber-700 font-black bg-slate-200" title="Tardanzas (T)">Cant. Tardanzas (T)</th>
+              <th rowspan="2" class="border border-slate-300 py-0.5 px-1 w-6 text-rose-700 font-black bg-slate-200" title="Faltas (F)">Cant. Faltas (F)</th>
+            </tr>
+            <tr id="tr-header-numbers" class="bg-slate-100 text-slate-800 font-bold text-[10px]">
+              <!-- Números inyectados dinámicamente -->
+            </tr>
+          </thead>
+          <tbody id="tb-body" class="divide-y divide-slate-200">
+            <tr>
+              <td colspan="37" class="py-6 text-slate-500 font-semibold text-xs">
+                <i class="fa-solid fa-spinner fa-spin text-xl text-indigo-600 mb-1 block"></i>
+                Inicializando información del servidor...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Sección de Firmas -->
+      <div class="signatures-container mt-8 pt-3 border-t border-slate-200 grid grid-cols-2 gap-8 text-center text-xs font-bold text-slate-800">
+        <div class="flex flex-col items-center">
+          <div class="w-44 border-b-2 border-slate-800 mb-1"></div>
+          <p class="font-extrabold uppercase text-[11px]">Firma del Docente / Tutor</p>
+          <p class="text-[9px] text-slate-500 font-normal">Responsable de Registro</p>
+        </div>
+        <div class="flex flex-col items-center">
+          <div class="w-44 border-b-2 border-slate-800 mb-1"></div>
+          <p class="font-extrabold uppercase text-[11px]">V°B° Dirección / Subdirección</p>
+          <p class="text-[9px] text-slate-500 font-normal">I.E. Guillermo Pinto Ismodes</p>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyhaXSkEi59rAtrjc5lJDAAEJ5KoCEajbSFaNMFGreY6dSCe1Z56_sYWzkjPr0OZwYb/exec';
+    let feriadosPeru = [];
+    const letrasDias = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+
+    function requestJSONP(url, params) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
+        window[callbackName] = function(data) {
+          delete window[callbackName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+          resolve(data);
+        };
+
+        const queryString = new URLSearchParams({ ...params, callback: callbackName }).toString();
+        const script = document.createElement('script');
+        script.src = `${url}?${queryString}`;
+        script.onerror = function() {
+          delete window[callbackName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+          reject(new Error('Error al conectar con Apps Script'));
+        };
+        document.body.appendChild(script);
+      });
+    }
+
+    window.onload = async function() {
+      try {
+        feriadosPeru = await requestJSONP(WEB_APP_URL, { action: 'getFeriados' }) || [];
+      } catch(e) {
+        feriadosPeru = [];
+      }
+      renderHeader();
+
+      try {
+        const info = await requestJSONP(WEB_APP_URL, { action: 'getPrimerRegistro' });
+        if (info && info.anio) {
+          document.getElementById('anio').value = info.anio;
+          document.getElementById('mes').value = info.mes;
+
+          let tag = document.getElementById('primer-registro-tag');
+          tag.style.display = 'inline-block';
+          tag.innerText = `Primer registro de asistencia: ${info.fechaCompleta}`;
+        }
+      } catch(e) {
+        console.error("Error al obtener el primer registro:", e);
+      }
+
+      cargarAsistencia();
+    };
+
+    function renderHeader() {
+      let trDays = document.getElementById('tr-header-days');
+      let trNumbers = document.getElementById('tr-header-numbers');
+      
+      let totalCols = trDays.querySelectorAll('.text-emerald-700');
+      let targetRefDays = totalCols[0];
+
+      let prevDays = trDays.querySelectorAll('.col-day-name');
+      prevDays.forEach(e => e.remove());
+      trNumbers.innerHTML = '';
+
+      let anio = parseInt(document.getElementById('anio').value) || new Date().getFullYear();
+      let mes = document.getElementById('mes').value;
+      let diasEnMes = new Date(anio, parseInt(mes), 0).getDate();
+
+      for (let d = 1; d <= diasEnMes; d++) {
+        let thName = document.createElement('th');
+        let thNum = document.createElement('th');
+
+        thName.className = 'col-day-name border border-slate-300 py-0.5 px-0.5 w-5 font-black text-[10px] text-slate-700 bg-slate-100';
+        thNum.className = 'col-day-num border border-slate-300 py-0.5 px-0.5 w-5 font-black text-[10px] text-slate-800 bg-slate-100';
+        thNum.innerText = d;
+
+        let fechaObj = new Date(anio, parseInt(mes) - 1, d);
+        let diaSemana = fechaObj.getDay();
+        let keyFeriado = `${mes}-${d.toString().padStart(2, '0')}`;
+
+        thName.innerText = letrasDias[diaSemana];
+
+        if (diaSemana === 0 || diaSemana === 6) {
+          thName.classList.add('day-weekend');
+          thNum.classList.add('day-weekend');
+          thName.title = diaSemana === 0 ? 'Domingo' : 'Sábado';
+        } else if (feriadosPeru.includes(keyFeriado)) {
+          thName.classList.add('day-feriado');
+          thNum.classList.add('day-feriado');
+          thName.title = 'Feriado Oficial';
+        }
+
+        trDays.insertBefore(thName, targetRefDays);
+        trNumbers.appendChild(thNum);
+      }
+    }
+
+    async function cargarAsistencia() {
+      renderHeader();
+      let anio = document.getElementById('anio').value;
+      let mes = document.getElementById('mes').value;
+      let mesTexto = document.getElementById('mes').options[document.getElementById('mes').selectedIndex].text;
+      let gradoSeccion = document.getElementById('gradoSeccion').value;
+
+      document.getElementById('subtitulo').innerText = `Año Lectivo: ${anio} | Mes: ${mesTexto} | Grado y Sección: ${gradoSeccion}`;
+      document.getElementById('tb-body').innerHTML = `
+        <tr>
+          <td colspan="37" class="py-6 text-slate-500 font-bold text-xs">
+            <i class="fa-solid fa-spinner fa-spin text-xl text-indigo-600 mb-1 block"></i>
+            Generando matriz de asistencia...
+          </td>
+        </tr>`;
+
+      try {
+        const data = await requestJSONP(WEB_APP_URL, {
+          action: 'buscarAsistencia',
+          anio: anio,
+          mes: mes,
+          gradoSeccion: gradoSeccion
+        });
+        mostrarMatriz(data);
+      } catch (err) {
+        console.error("Error al cargar asistencia:", err);
+        document.getElementById('tb-body').innerHTML = `<tr><td colspan="37" class="py-5 text-rose-600 font-bold text-xs">Error al obtener datos. Asegúrate de implementar una 'Nueva versión' en Google Apps Script.</td></tr>`;
+      }
+    }
+
+    function mostrarMatriz(data) {
+      let tbody = document.getElementById('tb-body');
+      tbody.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="37" class="py-5 text-slate-500 font-bold text-xs">No hay información registrada para la sección seleccionada en este mes.</td></tr>`;
+        return;
+      }
+
+      let anio = parseInt(document.getElementById('anio').value) || new Date().getFullYear();
+      let mes = document.getElementById('mes').value;
+      let diasEnMes = new Date(anio, parseInt(mes), 0).getDate();
+
+      data.forEach((alumno, idx) => {
+        let tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 border-b border-slate-200 text-slate-800 text-[10px] font-semibold";
+
+        let html = `<td class="border border-slate-300 py-0.5 px-0.5 font-black text-slate-900 bg-slate-50">${idx + 1}</td>`;
+        html += `<td class="border border-slate-300 py-0.5 px-0.5 font-bold text-slate-700 tracking-tight">${alumno.dni}</td>`;
+        html += `<td class="border border-slate-300 py-0.5 px-1 text-left font-bold text-slate-900">${alumno.nombre}</td>`;
+
+        for (let d = 1; d <= diasEnMes; d++) {
+          let fechaObj = new Date(anio, parseInt(mes) - 1, d);
+          let diaSemana = fechaObj.getDay();
+          let keyFeriado = `${mes}-${d.toString().padStart(2, '0')}`;
+
+          let estado = alumno.dias[d] || '';
+          let claseCss = estado ? `st-${estado}` : '';
+
+          if (diaSemana === 0 || diaSemana === 6) {
+            claseCss += ' day-weekend';
+          } else if (feriadosPeru.includes(keyFeriado)) {
+            claseCss += ' day-feriado';
+          }
+
+          html += `<td class="border border-slate-300 py-0.5 font-black ${claseCss}">${estado}</td>`;
+        }
+
+        html += `<td class="border border-slate-300 py-0.5 font-black text-emerald-700 bg-emerald-50/50 text-xs">${alumno.presentes}</td>`;
+        html += `<td class="border border-slate-300 py-0.5 font-black text-amber-700 bg-amber-50/50 text-xs">${alumno.tardanzas}</td>`;
+        html += `<td class="border border-slate-300 py-0.5 font-black text-rose-700 bg-rose-50/50 text-xs">${alumno.faltas}</td>`;
+
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+</html>
