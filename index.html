@@ -14,6 +14,7 @@
     .st-P { color: #15803d; background-color: #dcfce7; font-weight: 700; }
     .st-T { color: #b45309; background-color: #fef3c7; font-weight: 700; }
     .st-F { color: #b91c1c; background-color: #fee2e2; font-weight: 700; }
+    .st-disabled { background-color: #f1f5f9 !important; color: #cbd5e1 !important; }
 
     .day-weekend { background-color: #fef2f2 !important; color: #dc2626 !important; font-weight: 800; }
     .day-feriado { background-color: #ffe4e6 !important; color: #be123c !important; font-weight: 800; }
@@ -23,7 +24,6 @@
       body { padding: 0 !important; background: #fff !important; color: #000 !important; font-size: 8px !important; }
       .sheet-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
       
-      /* Optimización extrema del título para impresión */
       header { 
         padding: 4px 8px !important; 
         border-bottom: 2px solid #f59e0b !important; 
@@ -55,7 +55,7 @@
       </div>
       <div class="flex items-center justify-between gap-3 relative z-10">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur border border-amber-400/60 rounded-lg p-0.5 flex items-center justify-center shrink-0">
+          <div class="w-10 h-10 md:w-12 h-12 bg-white/10 backdrop-blur border border-amber-400/60 rounded-lg p-0.5 flex items-center justify-center shrink-0">
             <img id="logoInstitucion" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlxVGY62CT8y79VMt2kTGq_oJl9C9MmnRMyF6iBJIv0w&s=10" alt="Logo Institución" class="max-h-full max-w-full object-contain rounded">
           </div>
           <div>
@@ -86,13 +86,13 @@
           <select id="mes" onchange="cargarAsistencia()" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
             <option value="01">Enero</option><option value="02">Febrero</option><option value="03">Marzo</option>
             <option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option>
-            <option value="07">Julio</option><option value="08" selected>Agosto</option><option value="09">Septiembre</option>
+            <option value="07">Julio</option><option value="08">Agosto</option><option value="09" selected>Septiembre</option>
             <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
           </select>
         </div>
         <div>
           <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Grado y Sección</label>
-          <select id="gradoSeccion" onchange="cargarAsistencia()" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
+          <select id="gradoSeccion" onchange="cambiarGradoSeccion()" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
             <option value="1°A">1°A</option><option value="1°B">1°B</option><option value="2°U" selected>2°U</option>
             <option value="3°A">3°A</option><option value="3°B">3°B</option><option value="4°A">4°A</option>
             <option value="4°B">4°B</option><option value="5°A">5°A</option><option value="5°B">5°B</option>
@@ -114,7 +114,7 @@
       <div class="text-center pb-1.5 mb-2 border-b border-slate-200">
         <h2 class="print-title text-sm md:text-base font-black text-indigo-950 uppercase tracking-tight">CONTROL DE ASISTENCIA MENSUAL</h2>
         <p id="subtitulo" class="print-subtitle text-[11px] text-slate-600 font-bold">Cargando base de datos...</p>
-        <span id="primer-registro-tag" class="inline-block mt-0.5 bg-indigo-50 text-indigo-800 border border-indigo-200 text-[9px] font-bold px-2 py-0.5 rounded-full no-print" style="display:none;"></span>
+        <span id="primer-registro-tag" class="inline-block mt-0.5 border text-[10px] font-bold px-2 py-0.5 rounded-full no-print bg-indigo-50 text-indigo-800 border-indigo-200" style="display:none;"></span>
       </div>
 
       <div class="overflow-x-auto">
@@ -166,6 +166,19 @@
     let feriadosPeru = [];
     const letrasDias = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 
+    // Objeto global con las fechas exactas en que inició a marcar cada grado
+    const DATA_INICIOS = {
+      "1°A": { anio: 2026, mes: "08", dia: 24, texto: "24 de Agosto" },
+      "1°B": { anio: 2026, mes: "08", dia: 24, texto: "24 de Agosto" },
+      "2°U": { anio: 2026, mes: "08", dia: 18, texto: "18 de Agosto" },
+      "3°A": { anio: 2026, mes: "09", dia: 3,  texto: "03 de Septiembre" },
+      "3°B": { anio: 2026, mes: "09", dia: 3,  texto: "03 de Septiembre" },
+      "4°A": { anio: 2026, mes: "09", dia: 2,  texto: "02 de Septiembre" },
+      "4°B": { anio: 2026, mes: "09", dia: 2,  texto: "02 de Septiembre" },
+      "5°A": { anio: 2026, mes: "09", dia: 1,  texto: "01 de Septiembre" },
+      "5°B": { anio: 2026, mes: "09", dia: 1,  texto: "01 de Septiembre" }
+    };
+
     function requestJSONP(url, params) {
       return new Promise((resolve, reject) => {
         const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
@@ -193,24 +206,30 @@
       } catch(e) {
         feriadosPeru = [];
       }
-      renderHeader();
+      
+      cambiarGradoSeccion();
+    };
 
-      try {
-        const info = await requestJSONP(WEB_APP_URL, { action: 'getPrimerRegistro' });
-        if (info && info.anio) {
-          document.getElementById('anio').value = info.anio;
-          document.getElementById('mes').value = info.mes;
+    function cambiarGradoSeccion() {
+      let gradoSeccion = document.getElementById('gradoSeccion').value;
+      let tag = document.getElementById('primer-registro-tag');
+      let info = DATA_INICIOS[gradoSeccion];
 
-          let tag = document.getElementById('primer-registro-tag');
-          tag.style.display = 'inline-block';
-          tag.innerText = `Primer registro de asistencia: ${info.fechaCompleta}`;
+      if (info) {
+        document.getElementById('anio').value = info.anio;
+        // Mantiene el mes seleccionado o inicia por defecto en Septiembre ('09')
+        if (!document.getElementById('mes').value) {
+          document.getElementById('mes').value = "09";
         }
-      } catch(e) {
-        console.error("Error al obtener el primer registro:", e);
+        
+        tag.style.display = 'inline-block';
+        tag.innerText = `El grado ${gradoSeccion} inició marcación el ${info.texto} del ${info.anio}`;
+      } else {
+        tag.style.display = 'none';
       }
 
       cargarAsistencia();
-    };
+    }
 
     function renderHeader() {
       let trDays = document.getElementById('tr-header-days');
@@ -282,7 +301,7 @@
         mostrarMatriz(data);
       } catch (err) {
         console.error("Error al cargar asistencia:", err);
-        document.getElementById('tb-body').innerHTML = `<tr><td colspan="37" class="py-5 text-rose-600 font-bold text-xs">Error al obtener datos. Asegúrate de implementar una 'Nueva versión' en Google Apps Script.</td></tr>`;
+        document.getElementById('tb-body').innerHTML = `<tr><td colspan="37" class="py-5 text-rose-600 font-bold text-xs">Error al obtener datos del servidor. Asegúrate de tener conexión.</td></tr>`;
       }
     }
 
@@ -298,6 +317,11 @@
       let anio = parseInt(document.getElementById('anio').value) || new Date().getFullYear();
       let mes = document.getElementById('mes').value;
       let diasEnMes = new Date(anio, parseInt(mes), 0).getDate();
+      let gradoSeccion = document.getElementById('gradoSeccion').value;
+
+      // Obtener la fecha de inicio oficial para bloquear días previos
+      let infoInicio = DATA_INICIOS[gradoSeccion];
+      let fechaInicioOficial = infoInicio ? new Date(infoInicio.anio, parseInt(infoInicio.mes) - 1, infoInicio.dia) : new Date(2000, 0, 1);
 
       data.forEach((alumno, idx) => {
         let tr = document.createElement('tr');
@@ -307,26 +331,44 @@
         html += `<td class="border border-slate-300 py-0.5 px-0.5 font-bold text-slate-700 tracking-tight">${alumno.dni}</td>`;
         html += `<td class="border border-slate-300 py-0.5 px-1 text-left font-bold text-slate-900">${alumno.nombre}</td>`;
 
+        // Contadores Front-End para asegurar exactitud matemática
+        let totalP = 0, totalT = 0, totalF = 0;
+
         for (let d = 1; d <= diasEnMes; d++) {
           let fechaObj = new Date(anio, parseInt(mes) - 1, d);
           let diaSemana = fechaObj.getDay();
           let keyFeriado = `${mes}-${d.toString().padStart(2, '0')}`;
 
           let estado = alumno.dias[d] || '';
+
+          // LÓGICA PRINCIPAL: Si la fecha que se está dibujando es anterior al inicio de clases de esta sección, forzamos blanco.
+          if (fechaObj < fechaInicioOficial) {
+            estado = ''; 
+          }
+
           let claseCss = estado ? `st-${estado}` : '';
 
           if (diaSemana === 0 || diaSemana === 6) {
             claseCss += ' day-weekend';
           } else if (feriadosPeru.includes(keyFeriado)) {
             claseCss += ' day-feriado';
+          } else if (fechaObj < fechaInicioOficial) {
+             // Opcional: Le da un color gris sutil a los días previos al inicio
+            claseCss += ' st-disabled';
           }
+
+          // Sumatorias re-calculadas visualmente (ignora las que envía el servidor en fechas inválidas)
+          if (estado === 'X' || estado === 'P') totalP++;
+          if (estado === 'T') totalT++;
+          if (estado === 'F') totalF++;
 
           html += `<td class="border border-slate-300 py-0.5 font-black ${claseCss}">${estado}</td>`;
         }
 
-        html += `<td class="border border-slate-300 py-0.5 font-black text-emerald-700 bg-emerald-50/50 text-xs">${alumno.presentes}</td>`;
-        html += `<td class="border border-slate-300 py-0.5 font-black text-amber-700 bg-amber-50/50 text-xs">${alumno.tardanzas}</td>`;
-        html += `<td class="border border-slate-300 py-0.5 font-black text-rose-700 bg-rose-50/50 text-xs">${alumno.faltas}</td>`;
+        // Se imprimen las sumatorias re-calculadas
+        html += `<td class="border border-slate-300 py-0.5 font-black text-emerald-700 bg-emerald-50/50 text-xs">${totalP}</td>`;
+        html += `<td class="border border-slate-300 py-0.5 font-black text-amber-700 bg-amber-50/50 text-xs">${totalT}</td>`;
+        html += `<td class="border border-slate-300 py-0.5 font-black text-rose-700 bg-rose-50/50 text-xs">${totalF}</td>`;
 
         tr.innerHTML = html;
         tbody.appendChild(tr);
