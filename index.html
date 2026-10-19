@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+[cite: 1]<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -20,6 +20,7 @@
     .day-weekend { background-color: #fef2f2 !important; color: #dc2626 !important; font-weight: 800; }
     .day-feriado { background-color: #ffe4e6 !important; color: #be123c !important; font-weight: 800; }
     .day-gestion { background-color: #e2e8f0 !important; color: #475569 !important; font-weight: 800; }
+    .day-promo { background-color: #dbeafe !important; color: #1d4ed8 !important; font-weight: 800; }
 
     @media print {
       .no-print { display: none !important; }
@@ -153,6 +154,7 @@
         <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-100 border border-amber-400 inline-block"></span> Tardanza (T)</span>
         <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-100 border border-rose-400 inline-block"></span> Falta (F)</span>
         <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-100 border border-blue-400 inline-block"></span> Falta Justificada (FJ)</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-200 border border-blue-500 inline-block"></span> Viaje de Promoción (5°B)</span>
         <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-200 border border-rose-500 inline-block"></span> Feriado</span>
         <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-200 border border-slate-400 inline-block"></span> Semana de Gestión</span>
       </div>
@@ -245,6 +247,7 @@
     function renderHeader() {
       let trDays = document.getElementById('tr-header-days');
       let trNumbers = document.getElementById('tr-header-numbers');
+      let gradoSeccion = document.getElementById('gradoSeccion').value;
       
       let totalCols = trDays.querySelectorAll('.text-emerald-700');
       let targetRefDays = totalCols[0];
@@ -273,6 +276,7 @@
         let esFeriadoOct = (mes === '10' && d === 9);
         let esFeriadoSep = (mes === '09' && d === 23);
         let esSemanaGestionOct = (mes === '10' && d >= 12 && d <= 16);
+        let esViajePromoOct = (gradoSeccion === '5°B' && mes === '10' && d >= 19 && d <= 22);
 
         if (diaSemana === 0 || diaSemana === 6) {
           thName.classList.add('day-weekend');
@@ -286,6 +290,10 @@
           thName.classList.add('day-gestion');
           thNum.classList.add('day-gestion');
           thName.title = 'Semana de Gestión (Estudiantes no asisten)';
+        } else if (esViajePromoOct) {
+          thName.classList.add('day-promo');
+          thNum.classList.add('day-promo');
+          thName.title = 'Viaje de Promoción (5° B)';
         }
 
         trDays.insertBefore(thName, targetRefDays);
@@ -357,12 +365,18 @@
 
           let estado = alumno.dias ? (alumno.dias[d] || alumno.dias[d.toString()] || '') : '';
           let motivoText = (alumno.motivos && (alumno.motivos[d] || alumno.motivos[d.toString()])) ? (alumno.motivos[d] || alumno.motivos[d.toString()]) : '';
-          let motivoTooltip = motivoText ? `title="Motivo: ${motivoText}"` : '';
 
           let esFinDeSemana = (diaSemana === 0 || diaSemana === 6);
           let esFeriadoOct = (mes === '10' && d === 9);
           let esFeriadoSep = (mes === '09' && d === 23);
           let esSemanaGestion = (mes === '10' && d >= 12 && d <= 16);
+          let esViajePromo = (gradoSeccion === '5°B' && mes === '10' && d >= 19 && d <= 22);
+
+          // Si es Viaje de Promoción para 5°B en los días 19 a 22 de octubre
+          if (esViajePromo && !esFinDeSemana) {
+            estado = 'FJ';
+            if (!motivoText) motivoText = 'Viaje de Promoción';
+          }
 
           // Si el estado es 'FJ', prevalece
           if (estado !== 'FJ') {
@@ -371,6 +385,7 @@
             }
           }
 
+          let motivoTooltip = motivoText ? `title="Motivo: ${motivoText}"` : '';
           let claseCss = estado ? `st-${estado}` : '';
 
           if (esFinDeSemana) {
@@ -379,6 +394,8 @@
             claseCss += ' day-feriado';
           } else if (esSemanaGestion) {
             claseCss += ' day-gestion';
+          } else if (esViajePromo) {
+            claseCss += ' day-promo';
           } else if (fechaObj < fechaInicioOficial) {
             claseCss += ' st-disabled';
           }
